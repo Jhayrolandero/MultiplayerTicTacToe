@@ -1,5 +1,11 @@
-// Components
+import { io } from "socket.io-client";
+const socket = io("http://localhost:3001")
+
+// Hooks
 import { useState, useEffect } from "react";
+
+
+// Components
 import Square from "./Square";
 import Score from "./Score";
 
@@ -30,6 +36,14 @@ export default function Board() {
   const [yScore, setYScore] = useState(0);
   const [round, setRound] = useState(true);
   const [status, setStatus] = useState(`Player: ${player.toUpperCase()}`);
+
+  const sendMessage = () => {
+    socket.emit("send_message", { xScore, yScore})
+  }
+  
+  const updateScore = () => {
+    socket.emit("update_score", { xScore, yScore})
+  }
 
   function handleClick(idx : number) {
     if (!round || squares[idx] || calculateWinner(squares)) {
@@ -66,6 +80,15 @@ export default function Board() {
     }
   }, [squares]);
 
+  useEffect(() => {
+    updateScore()
+
+  }, [xScore])
+  useEffect(() => {
+    updateScore()
+
+  }, [yScore])
+
   // Reset the round
   useEffect(() => {
     if (!round) {
@@ -79,9 +102,19 @@ export default function Board() {
     }
   }, [round]);
 
+  // Update the score
+  useEffect(() => {
+    socket.on("receive_update", (data : {xScore: number, yScore: number}) => {
+      // console.log(data)
+      setXScore(data.xScore)
+      setYScore(data.yScore)
+    })
+  }, [socket])
+
   return (
     <>
       {status}
+      <button onClick={sendMessage}>send message</button>
       <div className="grid grid-cols-3 grid-rows-3">
         {squares.map((square, idx) => (
           <Square key={idx} value={square} onSquareClick={() => handleClick(idx)} />
