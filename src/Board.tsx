@@ -1,6 +1,7 @@
 // Components
-import { useState } from "react"
-import Square from "./Square"
+import { useState, useEffect } from "react";
+import Square from "./Square";
+import Score from "./Score";
 
 function calculateWinner(squares : string[]) {
   const lines = [
@@ -23,35 +24,73 @@ function calculateWinner(squares : string[]) {
 }
 
 export default function Board() {
-const [player, setPlayer] = useState('x')
-const [squares, setSquares] = useState(Array(9).fill(null))
+  const [player, setPlayer] = useState('x');
+  const [squares, setSquares] = useState(Array(9).fill(null));
+  const [xScore, setXScore] = useState(0);
+  const [yScore, setYScore] = useState(0);
+  const [round, setRound] = useState(true);
+  const [status, setStatus] = useState(`Player: ${player.toUpperCase()}`);
 
+  function handleClick(idx : number) {
+    if (!round || squares[idx] || calculateWinner(squares)) {
+      return;
+    }
 
-function handleClick(idx : number) {
+    const nextSquares = squares.slice();
+    nextSquares[idx] = player === "x" ? "X" : "O";
+    setSquares(nextSquares);
 
-  if(calculateWinner(squares)) return
-  const nextSquares = squares.slice();
-  nextSquares[idx] === null ? nextSquares[idx] = player === "x" ? "X" : "O" : nextSquares[idx] 
-  setPlayer(player === "x" ? "o" : "x");
-  setSquares(nextSquares);
-}
+    // Update the player state first
+    const nextPlayer = player === "x" ? "o" : "x";
+    setPlayer(nextPlayer);
+    setStatus(`Player: ${nextPlayer.toUpperCase()}`);
+  }
 
-let status = calculateWinner(squares) !== null ? `Winner: ${calculateWinner(squares)}` : `Player: ${player}`
+  // Calculate the score
+  useEffect(() => {
+    const winner = calculateWinner(squares);
+    if (winner) {
+      if (winner === "X") {
+        setXScore((prev) => prev + 1);
+      } else {
+        setYScore((prev) => prev + 1);
+      }
+      setStatus(`Winner: ${winner}`);
+      setRound(false);
+    }
+
+    // if there's no square left but no winner
+    if (!squares.includes(null) && !winner) {
+      setStatus("Draw!");
+      setRound(false);
+    }
+  }, [squares]);
+
+  // Reset the round
+  useEffect(() => {
+    if (!round) {
+      const timer = setTimeout(() => {
+        setSquares(Array(9).fill(null));
+        setPlayer('x');
+        setRound(true);
+        setStatus(`Player: X`);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [round]);
 
   return (
     <>
-    {status}
-    <div className="grid grid-cols-3 grid-rows-3">
-        <Square value={squares[0]} onSquareClick={() => handleClick(0)}/>
-        <Square value={squares[1]} onSquareClick={() => handleClick(1)}/>
-        <Square value={squares[2]} onSquareClick={() => handleClick(2)}/>
-        <Square value={squares[3]} onSquareClick={() => handleClick(3)}/>
-        <Square value={squares[4]} onSquareClick={() => handleClick(4)}/>
-        <Square value={squares[5]} onSquareClick={() => handleClick(5)}/>
-        <Square value={squares[6]} onSquareClick={() => handleClick(6)}/>
-        <Square value={squares[7]} onSquareClick={() => handleClick(7)}/>
-        <Square value={squares[8]} onSquareClick={() => handleClick(8)}/>
-    </div>
+      {status}
+      <div className="grid grid-cols-3 grid-rows-3">
+        {squares.map((square, idx) => (
+          <Square key={idx} value={square} onSquareClick={() => handleClick(idx)} />
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <Score player="x" score={xScore} />
+        <Score player="o" score={yScore} />
+      </div>
     </>
-  )
+  );
 }
