@@ -30,19 +30,21 @@ function calculateWinner(squares : string[]) {
 }
 
 export default function Board() {
+
+  const squaresArr = Array(9).fill(null)
   const [player, setPlayer] = useState('x');
-  const [squares, setSquares] = useState(Array(9).fill(null));
+  const [squares, setSquares] = useState(squaresArr);
   const [xScore, setXScore] = useState(0);
   const [yScore, setYScore] = useState(0);
   const [round, setRound] = useState(true);
   const [status, setStatus] = useState(`Player: ${player.toUpperCase()}`);
-
-  const sendMessage = () => {
-    socket.emit("send_message", { xScore, yScore})
-  }
-  
+  const [initialMount, setInitialMount] = useState(true)
   const updateScore = () => {
     socket.emit("update_score", { xScore, yScore})
+  }
+
+  const updateBoard = (board: string[]) => {
+    socket.emit("update_board", {board})
   }
 
   function handleClick(idx : number) {
@@ -53,6 +55,7 @@ export default function Board() {
     const nextSquares = squares.slice();
     nextSquares[idx] = player === "x" ? "X" : "O";
     setSquares(nextSquares);
+    updateBoard(nextSquares)
 
     // Update the player state first
     const nextPlayer = player === "x" ? "o" : "x";
@@ -62,6 +65,13 @@ export default function Board() {
 
   // Calculate the score
   useEffect(() => {
+
+    console.log("Update Board")
+    if(initialMount) {
+      setInitialMount(false)
+      return
+    }
+
     const winner = calculateWinner(squares);
     if (winner) {
       if (winner === "X") {
@@ -81,15 +91,16 @@ export default function Board() {
   }, [squares]);
 
   useEffect(() => {
-    updateScore()
+    console.log("update scores")
 
+    updateScore()
   }, [xScore])
   useEffect(() => {
     updateScore()
-
   }, [yScore])
 
-  // Reset the round
+
+// Reset the round
   useEffect(() => {
     if (!round) {
       const timer = setTimeout(() => {
@@ -102,19 +113,28 @@ export default function Board() {
     }
   }, [round]);
 
-  // Update the score
   useEffect(() => {
+    // sync the scores
     socket.on("receive_update", (data : {xScore: number, yScore: number}) => {
-      // console.log(data)
+      console.log("update adasdsadS")
       setXScore(data.xScore)
       setYScore(data.yScore)
     })
+
+    // Sync the board
+    socket.on("receive_updateBoard", (data: {squares: string[]}) => {
+      setSquares(data.squares)
+    })
+
+    return () => {
+      socket.off("receive_update");
+      socket.off("receive_updateBoard");
+    };
   }, [socket])
 
   return (
     <>
       {status}
-      <button onClick={sendMessage}>send message</button>
       <div className="grid grid-cols-3 grid-rows-3">
         {squares.map((square, idx) => (
           <Square key={idx} value={square} onSquareClick={() => handleClick(idx)} />
