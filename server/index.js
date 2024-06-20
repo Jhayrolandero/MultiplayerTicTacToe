@@ -18,6 +18,10 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
+  socket.emit("connected", {
+    msg: "Hello",
+  });
+
   socket.on("update_score", (data) => {
     console.log(data);
     socket.broadcast.emit("receive_update", {
@@ -30,6 +34,25 @@ io.on("connection", (socket) => {
     console.log(data);
     socket.broadcast.emit("receive_updateBoard", {
       squares: data.board,
+    });
+  });
+
+  socket.on("update_player", (data) => {
+    console.log(data);
+    socket.broadcast.emit("receiveUpdatePlayer", {
+      player: data.player,
+    });
+  });
+
+  socket.on("updateWinner", (data) => {
+    socket.broadcast.emit("receiveUpdateWinner", {
+      winner: data.winner,
+    });
+  });
+
+  socket.on("updateRound", (data) => {
+    socket.broadcast.emit("receiveUpdateRound", {
+      round: data.round,
     });
   });
 });
