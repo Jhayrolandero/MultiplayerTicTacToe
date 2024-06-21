@@ -15,8 +15,60 @@ const io = new Server(server, {
   },
 });
 
+function makeid(length) {
+  let result = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
+}
+
+const ROOM_CAPACITY = 2;
+const rooms = {};
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
+
+  socket.on("joinRoom", () => {
+    // Check first if there's a room if not create the first room
+    if (Object.keys(rooms).length <= 0) {
+      rooms[socket.id] = [];
+      rooms[socket.id].push(socket.id);
+      console.log("init rooms:", rooms);
+      return;
+    }
+
+    // check for rooms first
+    for (const [key, value] of Object.entries(rooms)) {
+      // make sure you don't join the same room
+      if (rooms[socket.id] && rooms[key].includes(socket.id)) {
+        console.log("all rooms:", rooms);
+        return;
+      }
+
+      // room founded
+      if (rooms[key].length < 2) {
+        rooms[key].push(socket.id);
+        console.log("Found room:", rooms);
+        return;
+      }
+
+      // check if you're already in a room
+      if (rooms[key].includes(socket.id)) return;
+    }
+
+    // Create your own room
+    if (!rooms[socket.id]) {
+      rooms[socket.id] = [];
+      rooms[socket.id].push(socket.id);
+      console.log("Created New room:", rooms);
+      return;
+    }
+  });
 
   socket.emit("connected", {
     msg: "Hello",
