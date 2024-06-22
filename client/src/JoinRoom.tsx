@@ -1,24 +1,23 @@
-import { io } from "socket.io-client";
-const socket = io("http://localhost:3001");
+import { ClientToServer } from "./interfaces/ClientToServer";
+import { Socket } from "socket.io-client";
 
+interface JoinRoomProps {
+  socket: Socket<ClientToServer, ClientToServer>;
+}
 
-import { useState } from "react"
-
-export default function JoinRoom() {
-  const [link, setLink] = useState('')
-
+export default function JoinRoom({ socket }: JoinRoomProps) {
   const play = () => {
-    socket.emit("joinRoom")
-  }
+    socket.emit("joinRoom");
+  };
 
   return (
     <div>
-      {/* <h4 className="text-[1.5rem] font-extrabold mr-2 text-[#4bc3b5] ">Join a Room</h4> */}
-      {/* <form action=""></form> */}
-      {/* <input type="text" onChange={search} className="border-2 border-black w-[240px]"/> */}
-      <button 
-      onClick={play}
-      className="text-[1.5rem] font-extrabold mr-2 text-[#4bc3b5]">Play</button>
+      <button
+        onClick={play}
+        className="text-[1.5rem] font-extrabold mr-2 text-[#4bc3b5]"
+      >
+        Play
+      </button>
     </div>
-  )
+  );
 }

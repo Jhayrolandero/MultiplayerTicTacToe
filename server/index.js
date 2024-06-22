@@ -13,32 +13,30 @@ const io = new Server(server, {
     origin: "http://localhost:5173",
     methods: ["GET", "POST"],
   },
+  connectionStateRecovery: {
+    // the backup duration of the sessions and the packets
+    maxDisconnectionDuration: 2 * 60 * 1000,
+    // whether to skip middlewares upon successful recovery
+    skipMiddlewares: true,
+  },
 });
-
-function makeid(length) {
-  let result = "";
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const charactersLength = characters.length;
-  let counter = 0;
-  while (counter < length) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    counter += 1;
-  }
-  return result;
-}
 
 const ROOM_CAPACITY = 2;
 const rooms = {};
+let currRoom = "";
 io.on("connection", (socket) => {
-  console.log(`User Connected: ${socket.id}`);
+  console.log("User connected: ", socket.id);
 
   socket.on("joinRoom", () => {
+    console.log("Joining Room");
     // Check first if there's a room if not create the first room
     if (Object.keys(rooms).length <= 0) {
+      currRoom = socket.id;
       rooms[socket.id] = [];
       rooms[socket.id].push(socket.id);
-      console.log("init rooms:", rooms);
+      socket.join(socket.id);
+      // console.log("init rooms:", rooms);
+      console.log("Room: ", currRoom);
       return;
     }
 
@@ -51,27 +49,31 @@ io.on("connection", (socket) => {
       }
 
       // room founded
-      if (rooms[key].length < 2) {
+      if (rooms[key].length < ROOM_CAPACITY) {
+        currRoom = key;
         rooms[key].push(socket.id);
-        console.log("Found room:", rooms);
+        socket.join(currRoom);
+        console.log("Room: ", currRoom);
+        io.to(currRoom).emit("startMatch", {
+          message: "Match Found",
+        });
+        // console.log("Found room:", rooms);
         return;
       }
-
       // check if you're already in a room
       if (rooms[key].includes(socket.id)) return;
     }
 
     // Create your own room
     if (!rooms[socket.id]) {
+      currRoom = socket.id;
       rooms[socket.id] = [];
       rooms[socket.id].push(socket.id);
-      console.log("Created New room:", rooms);
+      socket.join(socket.id);
+      console.log("Room: ", currRoom);
+      // console.log("Created New room:", rooms);
       return;
     }
-  });
-
-  socket.emit("connected", {
-    msg: "Hello",
   });
 
   socket.on("update_score", (data) => {
