@@ -1,12 +1,10 @@
-import { io } from "socket.io-client";
-const socket = io("http://localhost:3001");
-
 // Hooks
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 
 // Components
 import Square from "./Square";
 import Score from "./Score";
+import { SocketContext } from "./context/socket";
 
 function calculateWinner(squares : string[]) {
   const lines = [
@@ -29,6 +27,7 @@ function calculateWinner(squares : string[]) {
 }
 
 export default function Board() {
+  const socket = useContext(SocketContext);
   const squaresArr = Array(9).fill(null);
   const [player, setPlayer] = useState("x");
   const [squares, setSquares] = useState(squaresArr);
@@ -148,9 +147,6 @@ export default function Board() {
       setRound(data.round);
     });
 
-    socket.on("connected", (data) => {
-      console.log(data)
-    })
     return () => {
       socket.off("receive_update");
       socket.off("receive_updateBoard");

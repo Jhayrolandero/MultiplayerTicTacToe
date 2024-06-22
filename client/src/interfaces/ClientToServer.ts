@@ -1,7 +1,9 @@
-import { Message } from "./Message";
 
-export interface ClientToServer {
+export interface ClientToServerEvents {
     joinRoom: () => any;
-    startMatch: (data:Message) => void;
+    update_score: ({xScore, yScore}: {xScore: number, yScore: number}) => void
+    update_board: ({board} : {board: string[]}) => void
+    update_player: ({player} : {player: string}) => void
+    updateRound: ({round} : {round: boolean}) => void
 }
   

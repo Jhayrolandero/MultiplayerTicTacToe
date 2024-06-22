@@ -78,7 +78,7 @@ io.on("connection", (socket) => {
 
   socket.on("update_score", (data) => {
     console.log(data);
-    socket.broadcast.emit("receive_update", {
+    socket.to(currRoom).emit("receive_update", {
       xScore: data.xScore,
       yScore: data.yScore,
     });
@@ -86,26 +86,26 @@ io.on("connection", (socket) => {
 
   socket.on("update_board", (data) => {
     console.log(data);
-    socket.broadcast.emit("receive_updateBoard", {
+    socket.to(currRoom).emit("receive_updateBoard", {
       squares: data.board,
     });
   });
 
   socket.on("update_player", (data) => {
     console.log(data);
-    socket.broadcast.emit("receiveUpdatePlayer", {
+    socket.to(currRoom).emit("receiveUpdatePlayer", {
       player: data.player,
     });
   });
 
   socket.on("updateWinner", (data) => {
-    socket.broadcast.emit("receiveUpdateWinner", {
+    socket.to(currRoom).emit("receiveUpdateWinner", {
       winner: data.winner,
     });
   });
 
   socket.on("updateRound", (data) => {
-    socket.broadcast.emit("receiveUpdateRound", {
+    socket.to(currRoom).emit("receiveUpdateRound", {
       round: data.round,
     });
   });

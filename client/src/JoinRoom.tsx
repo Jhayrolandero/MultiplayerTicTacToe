@@ -1,11 +1,9 @@
-import { ClientToServer } from "./interfaces/ClientToServer";
-import { Socket } from "socket.io-client";
+import { useContext } from "react";
+import { SocketContext } from "./context/socket";
 
-interface JoinRoomProps {
-  socket: Socket<ClientToServer, ClientToServer>;
-}
+export default function JoinRoom() {
+  const socket = useContext(SocketContext)
 
-export default function JoinRoom({ socket }: JoinRoomProps) {
   const play = () => {
     socket.emit("joinRoom");
   };
