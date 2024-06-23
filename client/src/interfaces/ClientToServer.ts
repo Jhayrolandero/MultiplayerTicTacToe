@@ -1,6 +1,6 @@
 
 export interface ClientToServerEvents {
-    joinRoom: () => any;
+    quickPlay: ({user} : {user:string}) => void;
     update_score: ({xScore, yScore}: {xScore: number, yScore: number}) => void
     update_board: ({board} : {board: string[]}) => void
     update_player: ({player} : {player: string}) => void
